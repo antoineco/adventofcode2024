@@ -1,0 +1,10 @@
+# Cargo
+/target/
+/Cargo.lock
+
+# Dev tools
+/.envrc
+/.direnv/
+
+# Advent Of Code
+/input
