@@ -1,4 +1,6 @@
 use crate::util::parse::ParseOps;
+use std::collections::HashMap;
+use std::ops::Mul;
 
 #[derive(Clone)]
 pub struct Locations {
@@ -39,8 +41,14 @@ pub fn part1(locs: &Locations) -> u32 {
         .fold(0, |acc, lr| acc + lr.0.abs_diff(lr.1))
 }
 
-pub fn part2(_: &Locations) -> u32 {
-    0
+pub fn part2(locs: &Locations) -> u32 {
+    let mut right_cnt = HashMap::new();
+    locs.right.iter().for_each(|l| {
+        right_cnt.entry(l).and_modify(|e| *e += 1).or_insert(1);
+    });
+    locs.left
+        .iter()
+        .fold(0, |acc, l| acc + right_cnt.entry(l).or_default().mul(l))
 }
 
 #[test]
@@ -55,4 +63,5 @@ fn sample_input() {
         ";
     let locs = parse(input);
     assert_eq!(part1(&locs), 11);
+    assert_eq!(part2(&locs), 31);
 }
