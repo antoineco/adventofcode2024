@@ -1,9 +1,7 @@
-#[allow(unused_imports)]
 use aoc2024::solutions;
 use aoc2024::util::parse::ParseOps;
 use std::env::args;
 use std::fs::read_to_string;
-#[allow(unused_imports)]
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -36,7 +34,6 @@ struct Solution {
     wrapper: fn(String) -> (String, String),
 }
 
-#[allow(unused_macros)]
 macro_rules! solution {
     ($day:tt) => {{
         let day = stringify!($day);
@@ -61,5 +58,5 @@ macro_rules! solution {
 }
 
 fn solutions() -> Vec<Solution> {
-    vec![]
+    vec![solution!(day01)]
 }
