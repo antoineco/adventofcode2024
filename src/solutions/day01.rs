@@ -1,4 +1,5 @@
 use crate::util::parse::ParseOps;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Locations {
@@ -40,8 +41,15 @@ pub fn part1(locs: &Locations) -> u32 {
         .sum()
 }
 
-pub fn part2(_: &Locations) -> u32 {
-    0
+pub fn part2(locs: &Locations) -> u32 {
+    let mut right_cnt = HashMap::new();
+    locs.right
+        .iter()
+        .for_each(|l| *right_cnt.entry(l).or_insert(0u32) += 1);
+    locs.left
+        .iter()
+        .filter_map(|l| right_cnt.get(l).map(|cnt| l * cnt))
+        .sum()
 }
 
 #[test]
@@ -56,4 +64,5 @@ fn sample_input() {
         ";
     let locs = parse(input);
     assert_eq!(part1(&locs), 11);
+    assert_eq!(part2(&locs), 31);
 }
