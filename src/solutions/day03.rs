@@ -1,15 +1,18 @@
 use std::str::Bytes;
 
-pub fn parse(input: &str) -> Vec<Mul> {
-    input.iter_mul().collect()
+pub fn parse(input: &str) -> [Vec<Mul>; 2] {
+    [
+        input.iter_mul().collect(),
+        input.iter_mul_with_instructions().collect(),
+    ]
 }
 
-pub fn part1(muls: &[Mul]) -> u32 {
-    muls.iter().map(|m| m.0 * m.1).sum()
+pub fn part1(muls: &[Vec<Mul>; 2]) -> u32 {
+    muls[0].iter().map(|m| m.0 * m.1).sum()
 }
 
-pub fn part2(_: &[Mul]) -> u32 {
-    0
+pub fn part2(muls: &[Vec<Mul>; 2]) -> u32 {
+    muls[1].iter().map(|m| m.0 * m.1).sum()
 }
 
 pub struct Mul(u32, u32);
@@ -22,34 +25,54 @@ impl From<Vec<u32>> for Mul {
 
 trait ParseOps {
     fn iter_mul(&self) -> ParseMul;
+    fn iter_mul_with_instructions(&self) -> ParseMul;
 }
 
 impl ParseOps for &str {
     fn iter_mul(&self) -> ParseMul {
         ParseMul {
             bytes: self.bytes(),
+            instructions: false,
+        }
+    }
+
+    fn iter_mul_with_instructions(&self) -> ParseMul {
+        ParseMul {
+            bytes: self.bytes(),
+            instructions: true,
         }
     }
 }
 
 struct ParseMul<'a> {
     bytes: Bytes<'a>,
+    instructions: bool,
 }
 
 impl Iterator for ParseMul<'_> {
     type Item = Mul;
 
     fn next(&mut self) -> Option<Self::Item> {
-        try_mul(&mut self.bytes)
+        try_mul(&mut self.bytes, self.instructions)
     }
 }
 
-fn try_mul(bytes: &mut Bytes) -> Option<Mul> {
+fn try_mul(bytes: &mut Bytes, instructions: bool) -> Option<Mul> {
     let mut last_three = [0_u8; 3];
+    let mut ret = true;
     loop {
         let byte = bytes.next()?;
+        // reached "do()"
+        if instructions && byte == b')' && last_three.iter().eq([b'd', b'o', b'('].iter()) {
+            ret = true
+        }
+        // reached "'t()" - for "don't()"
+        // Hacky but works on the puzzle's input.
+        else if instructions && byte == b')' && last_three.iter().eq([b'\'', b't', b'('].iter()) {
+            ret = false
+        }
         // reached "mul("
-        if byte == b'(' && last_three.iter().eq([b'm', b'u', b'l'].iter()) {
+        else if ret && byte == b'(' && last_three.iter().eq([b'm', b'u', b'l'].iter()) {
             let mut numbers: Vec<u32> = Vec::with_capacity(2);
             let mut digits = String::with_capacity(3);
             loop {
@@ -95,8 +118,9 @@ fn try_mul(bytes: &mut Bytes) -> Option<Mul> {
 #[test]
 fn sample_input() {
     let input = "\
-        xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))\n\
+        xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))\n
         ";
     let res = parse(input);
     assert_eq!(part1(&res), 161);
+    assert_eq!(part2(&res), 48);
 }
