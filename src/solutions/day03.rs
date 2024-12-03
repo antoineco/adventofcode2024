@@ -63,20 +63,23 @@ fn try_mul(bytes: &mut Bytes, instructions: bool) -> Option<Mul> {
     loop {
         let byte = bytes.next()?;
         // reached "do()"
-        if instructions && byte == b')' && last_three.iter().eq([b'd', b'o', b'('].iter()) {
+        if instructions && byte == b')' && last_three == [b'd', b'o', b'('] {
             ret = true
         }
         // reached "'t()" - for "don't()"
         // Hacky but works on the puzzle's input.
-        else if instructions && byte == b')' && last_three.iter().eq([b'\'', b't', b'('].iter()) {
+        else if instructions && byte == b')' && last_three == [b'\'', b't', b'('] {
             ret = false
         }
         // reached "mul("
-        else if ret && byte == b'(' && last_three.iter().eq([b'm', b'u', b'l'].iter()) {
+        else if ret && byte == b'(' && last_three == [b'm', b'u', b'l'] {
+            (last_three[0], last_three[1], last_three[2]) = (last_three[1], last_three[2], byte);
             let mut numbers: Vec<u32> = Vec::with_capacity(2);
             let mut digits = String::with_capacity(3);
             loop {
-                match bytes.next()? {
+                let byte = bytes.next()?;
+                (last_three[0], last_three[1], last_three[2]) = (last_three[1], last_three[2], byte);
+                match byte {
                     d @ b'0'..=b'9' => {
                         digits.push(d.into());
                     }
@@ -107,10 +110,8 @@ fn try_mul(bytes: &mut Bytes, instructions: bool) -> Option<Mul> {
             if numbers.len() == 2 {
                 return Some(numbers.into());
             }
+            continue;
         }
-        // Note that last_three will equal ['u','l',('] here if "mul(" was reached earlier, which
-        // is incorrect since we have advanced the bytes iterator, possibly multiple times. This
-        // inaccuracy has no effect on the cases we compare last_three against though.
         (last_three[0], last_three[1], last_three[2]) = (last_three[1], last_three[2], byte);
     }
 }
@@ -118,9 +119,20 @@ fn try_mul(bytes: &mut Bytes, instructions: bool) -> Option<Mul> {
 #[test]
 fn sample_input() {
     let input = "\
-        xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))\n
+        xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))\n\
         ";
     let res = parse(input);
     assert_eq!(part1(&res), 161);
     assert_eq!(part2(&res), 48);
+}
+
+#[test]
+fn mul_in_mul() {
+    let input = "\
+        xmul(2,mul(8,5)\n\
+        xmul(mul(8,5)\n\
+        ";
+    let res = parse(input);
+    assert_eq!(part1(&res), 80);
+    assert_eq!(part2(&res), 80);
 }
