@@ -71,8 +71,47 @@ pub fn part1(lls: &LetterLocs) -> u32 {
         .sum()
 }
 
-pub fn part2(_: &LetterLocs) -> u32 {
-    0
+pub fn part2(lls: &LetterLocs) -> u32 {
+    let dist_s_from_m = ("MAS".len() - 1) as i32;
+    let dist_a_from_m = dist_s_from_m - 1;
+    let upper_bound = lls.size as i32 - 1;
+
+    // 'x' shaped crosses
+    let mut x_centers = HashSet::new();
+
+    lls.m
+        .iter()
+        .map(|(x, y)| {
+            let mut occurences: u32 = 0;
+
+            // ↖ ↙ ↗ ↘
+            // '+' shaped crosses do not count
+            for i in [-1, 1] {
+                for j in [-1, 1] {
+                    let s_loc = (*x as i32 + i * dist_s_from_m, *y as i32 + j * dist_s_from_m);
+                    if s_loc.0.is_negative()
+                        || s_loc.1.is_negative()
+                        || (upper_bound - s_loc.0).is_negative()
+                        || (upper_bound - s_loc.1).is_negative()
+                    {
+                        continue;
+                    }
+
+                    let s_loc: (usize, usize) = (s_loc.0 as usize, s_loc.1 as usize);
+                    let a_loc: (usize, usize) = (
+                        (*x as i32 + i * dist_a_from_m) as usize,
+                        (*y as i32 + j * dist_a_from_m) as usize,
+                    );
+
+                    if lls.is_s(s_loc) && lls.is_a(a_loc) && !x_centers.insert(a_loc) {
+                        occurences += 1
+                    }
+                }
+            }
+
+            occurences
+        })
+        .sum()
 }
 
 pub struct LetterLocs {
@@ -123,4 +162,5 @@ fn sample_input() {
         ";
     let lls = parse(input);
     assert_eq!(part1(&lls), 18);
+    assert_eq!(part2(&lls), 9);
 }
