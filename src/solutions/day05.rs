@@ -42,8 +42,18 @@ pub fn part1(sections: &(Updates, OrderingRules)) -> u32 {
         .sum()
 }
 
-pub fn part2(_: &(Updates, OrderingRules)) -> u32 {
-    0
+pub fn part2(sections: &(Updates, OrderingRules)) -> u32 {
+    let (updates, ordering_rules) = sections;
+    updates
+        .iter()
+        .map(|upd| {
+            if !ordering_rules.sorted(upd) {
+                ordering_rules.sort(upd)[upd.len() / 2]
+            } else {
+                0
+            }
+        })
+        .sum()
 }
 
 type Updates = Vec<Vec<u32>>;
@@ -63,6 +73,18 @@ impl OrderingRules {
 
     fn sorted(&self, pages: &[u32]) -> bool {
         pages.is_sorted_by(|a, b| self.r.get(a).is_some_and(|rules| rules.contains(b)))
+    }
+
+    fn sort(&self, pages: &[u32]) -> Vec<u32> {
+        let mut pages_ordered = pages.to_owned();
+        pages_ordered.sort_by(|a, b| {
+            if self.r.get(a).is_some_and(|rules| rules.contains(b)) {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        });
+        pages_ordered
     }
 }
 
@@ -100,6 +122,7 @@ fn sample_input() {
         ";
     let out = parse(input);
     assert_eq!(part1(&out), 143);
+    assert_eq!(part2(&out), 123);
 }
 
 #[test]
@@ -437,4 +460,5 @@ fn contains_loop() {
         ";
     let out = parse(input);
     assert_eq!(part1(&out), 11);
+    assert_eq!(part2(&out), 0);
 }
