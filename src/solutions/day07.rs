@@ -36,8 +36,29 @@ pub fn part1(eqs: &[(u64, Vec<u64>)]) -> u64 {
         .sum()
 }
 
-pub fn part2(_: &[(u64, Vec<u64>)]) -> u64 {
-    0
+pub fn part2(eqs: &[(u64, Vec<u64>)]) -> u64 {
+    eqs.par_iter()
+        .map(|eq| {
+            let (tval, numbers) = eq;
+            let mut summaries =
+                VecDeque::with_capacity(3_u32.pow(numbers.len() as u32 - 1) as usize);
+            let mut iter = numbers.iter();
+            summaries.push_back(*iter.next().unwrap());
+            iter.for_each(|n| {
+                for _ in 0..summaries.len() {
+                    let s = summaries.pop_front().unwrap();
+                    summaries.push_back(s + n);
+                    summaries.push_back(s * n);
+                    summaries.push_back((s.to_string() + &n.to_string()).parse().unwrap());
+                }
+            });
+            if summaries.contains(tval) {
+                *tval
+            } else {
+                0
+            }
+        })
+        .sum()
 }
 
 #[test]
@@ -55,4 +76,5 @@ fn sample_input() {
         ";
     let eqs = parse(input);
     assert_eq!(part1(&eqs), 3749);
+    assert_eq!(part2(&eqs), 11387);
 }
