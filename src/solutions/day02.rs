@@ -10,7 +10,7 @@ pub fn parse(input: &str) -> Vec<Vec<u32>> {
     reports
 }
 
-pub fn part1(reports: &[Vec<u32>]) -> u32 {
+pub fn part1(reports: &[Vec<u32>]) -> usize {
     reports
         .iter()
         .filter(|levels| {
@@ -24,11 +24,9 @@ pub fn part1(reports: &[Vec<u32>]) -> u32 {
             lvls_iter.is_sorted_by(|a: &&u32, b: &&u32| is_sorted(a, b))
         })
         .count()
-        .try_into()
-        .unwrap()
 }
 
-pub fn part2(reports: &[Vec<u32>]) -> u32 {
+pub fn part2(reports: &[Vec<u32>]) -> usize {
     reports
         .iter()
         .filter(|levels| {
@@ -45,22 +43,18 @@ pub fn part2(reports: &[Vec<u32>]) -> u32 {
                 return true;
             }
 
-            let mut levels = (*levels).clone();
             for i in 0..levels.len() {
-                let l = levels.remove(i);
-                if levels
+                if levels[..i]
                     .iter()
+                    .chain(levels[(i + 1)..].iter())
                     .is_sorted_by(|a: &&u32, b: &&u32| is_sorted(a, b))
                 {
                     return true;
                 }
-                levels.insert(i, l);
             }
             false
         })
         .count()
-        .try_into()
-        .unwrap()
 }
 
 fn is_sorted_fn(ord: Ordering) -> fn(a: &u32, b: &u32) -> bool {
