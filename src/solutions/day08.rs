@@ -34,8 +34,27 @@ pub fn part1(g: &Grid) -> usize {
     antinodes.len()
 }
 
-pub fn part2(_: &Grid) -> usize {
-    0
+pub fn part2(g: &Grid) -> usize {
+    let mut antinodes = HashSet::new();
+    g.antennas.iter().for_each(|antennas| {
+        antennas.iter().enumerate().for_each(|(i, antenna)| {
+            antinodes.insert(*antenna);
+            let rotation_points = antennas[..i].iter().chain(antennas[(i + 1)..].iter());
+            rotation_points.for_each(|rp| {
+                let mut antenna = *antenna;
+                let mut rp = *rp;
+                loop {
+                    let a = antenna.rotate_180(&rp);
+                    if !g.contains(&a) {
+                        break;
+                    }
+                    antinodes.insert(a);
+                    (antenna, rp) = (rp, a);
+                }
+            });
+        });
+    });
+    antinodes.len()
 }
 
 pub struct Grid {
@@ -50,7 +69,7 @@ impl Grid {
     }
 }
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Hash, Eq, PartialEq)]
 struct Point(i32, i32);
 
 impl Point {
@@ -77,4 +96,5 @@ fn sample_input() {
         ";
     let out = parse(input);
     assert_eq!(part1(&out), 14);
+    assert_eq!(part2(&out), 34);
 }
