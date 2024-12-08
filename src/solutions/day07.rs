@@ -1,5 +1,4 @@
 use crate::util::parse::ParseOps;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::VecDeque;
 
 pub fn parse(input: &str) -> Vec<(u64, Vec<u64>)> {
@@ -13,21 +12,25 @@ pub fn parse(input: &str) -> Vec<(u64, Vec<u64>)> {
 }
 
 pub fn part1(eqs: &[(u64, Vec<u64>)]) -> u64 {
-    eqs.par_iter()
+    eqs.iter()
         .map(|eq| {
             let (tval, numbers) = eq;
-            let mut summaries =
-                VecDeque::with_capacity(2_u32.pow(numbers.len() as u32 - 1) as usize);
-            let mut iter = numbers.iter();
-            summaries.push_back(*iter.next().unwrap());
-            iter.for_each(|n| {
+            let mut summaries = VecDeque::new();
+            summaries.push_back(*tval);
+            for n in numbers[1..].iter().rev() {
+                // No need to break early if summaries is empty, this case never occurs on the
+                // given input.
                 for _ in 0..summaries.len() {
                     let s = summaries.pop_front().unwrap();
-                    summaries.push_back(s + n);
-                    summaries.push_back(s * n);
+                    if *n < s {
+                        summaries.push_back(s - n);
+                    }
+                    if s % n == 0 {
+                        summaries.push_back(s / n);
+                    }
                 }
-            });
-            if summaries.contains(tval) {
+            }
+            if summaries.contains(&numbers[0]) {
                 *tval
             } else {
                 0
@@ -37,28 +40,39 @@ pub fn part1(eqs: &[(u64, Vec<u64>)]) -> u64 {
 }
 
 pub fn part2(eqs: &[(u64, Vec<u64>)]) -> u64 {
-    eqs.par_iter()
+    eqs.iter()
         .map(|eq| {
             let (tval, numbers) = eq;
-            let mut summaries =
-                VecDeque::with_capacity(3_u32.pow(numbers.len() as u32 - 1) as usize);
-            let mut iter = numbers.iter();
-            summaries.push_back(*iter.next().unwrap());
-            iter.for_each(|n| {
+            let mut summaries = VecDeque::new();
+            summaries.push_back(*tval);
+            for n in numbers[1..].iter().rev() {
+                // No need to break early if summaries is empty, this case never occurs on the
+                // given input.
                 for _ in 0..summaries.len() {
                     let s = summaries.pop_front().unwrap();
-                    summaries.push_back(s + n);
-                    summaries.push_back(s * n);
-                    summaries.push_back((s.to_string() + &n.to_string()).parse().unwrap());
+                    if *n < s {
+                        summaries.push_back(s - n);
+                    }
+                    if s % n == 0 {
+                        summaries.push_back(s / n);
+                    }
+                    let div = 10_u64.pow(num_digits(n));
+                    if s % div == *n {
+                        summaries.push_back(s / div);
+                    }
                 }
-            });
-            if summaries.contains(tval) {
+            }
+            if summaries.contains(&numbers[0]) {
                 *tval
             } else {
                 0
             }
         })
         .sum()
+}
+
+fn num_digits(n: &u64) -> u32 {
+    n.ilog10() + 1
 }
 
 #[test]
@@ -77,4 +91,21 @@ fn sample_input() {
     let eqs = parse(input);
     assert_eq!(part1(&eqs), 3749);
     assert_eq!(part2(&eqs), 11387);
+}
+
+#[test]
+fn extract_from_real_input() {
+    let input = "\
+        127536599: 49 4 21 65 99\n\
+        7: 15 15 15\n\
+        ";
+    let eqs = parse(input);
+    assert_eq!(part1(&eqs), 0);
+    /* 49 * 4 || 21 x 65 || 99
+     *    196 || 21 x 65 || 99
+     *        19621 x 65 || 99
+     *           1275365 || 99
+     *               127536599
+     */
+    assert_eq!(part2(&eqs), 127536599);
 }
