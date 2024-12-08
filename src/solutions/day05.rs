@@ -25,7 +25,7 @@ pub fn part1(sections: &(Updates, OrderingRules)) -> u32 {
     let (updates, ordering_rules) = sections;
     updates
         .iter()
-        .map(|upd| {
+        .filter_map(|upd| {
             // We cannot pre-sort the pages from the input and simply compare upd to (pages ∪ upd),
             // because the ordering rules contain a loop by design, so sort_by() panics ("sort
             // comparison does not implement a total order"). By chance, the provided updates
@@ -34,9 +34,9 @@ pub fn part1(sections: &(Updates, OrderingRules)) -> u32 {
             //
             // See test 'contains_loop' for an input which allows reproducing the panic.
             if ordering_rules.sorted(upd) {
-                upd[upd.len() / 2]
+                Some(upd[upd.len() / 2])
             } else {
-                0
+                None
             }
         })
         .sum()
@@ -46,11 +46,11 @@ pub fn part2(sections: &(Updates, OrderingRules)) -> u32 {
     let (updates, ordering_rules) = sections;
     updates
         .iter()
-        .map(|upd| {
+        .filter_map(|upd| {
             if !ordering_rules.sorted(upd) {
-                ordering_rules.sort(upd)[upd.len() / 2]
+                Some(ordering_rules.sort(upd)[upd.len() / 2])
             } else {
-                0
+                None
             }
         })
         .sum()

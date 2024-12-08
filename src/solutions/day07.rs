@@ -13,7 +13,7 @@ pub fn parse(input: &str) -> Vec<(u64, Vec<u64>)> {
 
 pub fn part1(eqs: &[(u64, Vec<u64>)]) -> u64 {
     eqs.iter()
-        .map(|eq| {
+        .filter_map(|eq| {
             let (tval, numbers) = eq;
             let mut summaries = VecDeque::new();
             summaries.push_back(*tval);
@@ -31,9 +31,9 @@ pub fn part1(eqs: &[(u64, Vec<u64>)]) -> u64 {
                 }
             }
             if summaries.contains(&numbers[0]) {
-                *tval
+                Some(*tval)
             } else {
-                0
+                None
             }
         })
         .sum()
@@ -41,7 +41,7 @@ pub fn part1(eqs: &[(u64, Vec<u64>)]) -> u64 {
 
 pub fn part2(eqs: &[(u64, Vec<u64>)]) -> u64 {
     eqs.iter()
-        .map(|eq| {
+        .filter_map(|eq| {
             let (tval, numbers) = eq;
             let mut summaries = VecDeque::new();
             summaries.push_back(*tval);
@@ -63,9 +63,9 @@ pub fn part2(eqs: &[(u64, Vec<u64>)]) -> u64 {
                 }
             }
             if summaries.contains(&numbers[0]) {
-                *tval
+                Some(*tval)
             } else {
-                0
+                None
             }
         })
         .sum()

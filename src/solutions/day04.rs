@@ -31,7 +31,7 @@ pub fn part1(lls: &LetterLocs) -> u32 {
 
     lls.x
         .iter()
-        .map(|(x, y)| {
+        .filter_map(|(x, y)| {
             let mut occurences: u32 = 0;
 
             // ↖ ← ↙ ↑ . ↓ ↗ → ↘
@@ -66,7 +66,11 @@ pub fn part1(lls: &LetterLocs) -> u32 {
                 }
             }
 
-            occurences
+            if occurences > 0 {
+                Some(occurences)
+            } else {
+                None
+            }
         })
         .sum()
 }
@@ -81,7 +85,7 @@ pub fn part2(lls: &LetterLocs) -> u32 {
 
     lls.m
         .iter()
-        .map(|(x, y)| {
+        .filter_map(|(x, y)| {
             let mut occurences: u32 = 0;
 
             // ↖ ↙ ↗ ↘
@@ -109,7 +113,11 @@ pub fn part2(lls: &LetterLocs) -> u32 {
                 }
             }
 
-            occurences
+            if occurences > 0 {
+                Some(occurences)
+            } else {
+                None
+            }
         })
         .sum()
 }

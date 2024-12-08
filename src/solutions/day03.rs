@@ -11,19 +11,14 @@ pub fn part1(muls: &[Mul]) -> u32 {
 pub fn part2(muls: &[Mul]) -> u32 {
     let mut r#do = true;
     muls.iter()
-        .map(|m| match m {
+        .filter_map(|m| match m {
             // Rogue values
             Mul(0, b) => {
                 r#do = *b == 1;
-                0
+                None
             }
-            _ => {
-                if r#do {
-                    m.0 * m.1
-                } else {
-                    0
-                }
-            }
+            Mul(a, b) if r#do => Some(a * b),
+            _ => None,
         })
         .sum()
 }

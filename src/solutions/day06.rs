@@ -16,7 +16,7 @@ pub fn parse(input: &str) -> (Grid, usize) {
     (grid, start)
 }
 
-pub fn part1(r#in: &(Grid, usize)) -> u32 {
+pub fn part1(r#in: &(Grid, usize)) -> usize {
     let (grid, start) = r#in;
 
     let mut visits = HashSet::new();
@@ -29,10 +29,10 @@ pub fn part1(r#in: &(Grid, usize)) -> u32 {
         visits.insert(cur_pos);
     }
 
-    visits.len() as u32
+    visits.len()
 }
 
-pub fn part2(_: &(Grid, usize)) -> u32 {
+pub fn part2(_: &(Grid, usize)) -> usize {
     0
 }
 
