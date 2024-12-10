@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub fn parse(input: &str) -> (Grid, usize) {
     let input_unwrapped: &str = &input.replace('\n', "");
@@ -32,10 +32,66 @@ pub fn part1(r#in: &(Grid, usize)) -> usize {
     visits.len()
 }
 
-pub fn part2(_: &(Grid, usize)) -> usize {
-    0
+pub fn part2(r#in: &(Grid, usize)) -> usize {
+    let (grid, start) = r#in;
+
+    let mut visits = HashSet::new();
+    let mut visits_ordered = Vec::new();
+    let mut visits_per_pos = HashMap::new();
+
+    let mut cur_pos = *start;
+    let mut cur_direction = Direction::Up;
+    visits.insert((cur_pos, cur_direction));
+    visits_ordered.push((cur_pos, cur_direction));
+    while let Some((pos, d)) = grid.step(&cur_pos, &cur_direction) {
+        (cur_pos, cur_direction) = (pos, d);
+        visits.insert((cur_pos, cur_direction));
+        visits_ordered.push((cur_pos, cur_direction));
+        *visits_per_pos.entry(cur_pos).or_insert(0) += 1;
+    }
+
+    let mut grid = grid.clone();
+
+    visits_ordered
+        .iter()
+        .enumerate()
+        .skip(1)
+        .rev()
+        .filter(|(i, visit)| {
+            visits.remove(visit);
+
+            let new_obs = visit.0;
+            // If the position was walked on multiple times, placing the obstacle at that position
+            // late during the walk may skew the result. In that scenario, we consider the earliest
+            // position in the loop detection, and this position only.
+            if *visits_per_pos.get(&new_obs).unwrap() > 1 {
+                visits_per_pos.entry(new_obs).and_modify(|n| *n -= 1);
+                return false;
+            }
+
+            // Skip all steps known from initial walk and start at the position right before the
+            // new obstacle.
+            let mut visits = visits.clone();
+            let (prev_pos, prev_direction) = visits_ordered[i - 1];
+            let mut cur_pos = prev_pos;
+            let mut cur_direction = prev_direction;
+
+            let mut is_loop = false;
+            grid.obstacles.insert(new_obs);
+            while let Some((pos, d)) = grid.step(&cur_pos, &cur_direction) {
+                if !visits.insert((pos, d)) {
+                    is_loop = true;
+                    break;
+                }
+                (cur_pos, cur_direction) = (pos, d);
+            }
+            grid.obstacles.remove(&new_obs);
+            is_loop
+        })
+        .count()
 }
 
+#[derive(Clone)]
 pub struct Grid {
     size: usize,
     obstacles: HashSet<usize>,
@@ -74,7 +130,7 @@ impl Grid {
         if self.obstacles.contains(&nxt) {
             self.step(cur, &d.next())
         } else {
-            Some((nxt, d.clone()))
+            Some((nxt, *d))
         }
     }
 
@@ -89,7 +145,7 @@ impl Grid {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Hash, Eq, PartialEq)]
 #[repr(u8)]
 enum Direction {
     Up,
@@ -100,7 +156,7 @@ enum Direction {
 
 impl Direction {
     fn next(&self) -> Self {
-        ((self.clone() as u8 + 1_u8) % 4).try_into().unwrap()
+        ((*self as u8 + 1_u8) % 4).try_into().unwrap()
     }
 }
 
@@ -136,4 +192,5 @@ fn sample_input() {
         ";
     let out = parse(input);
     assert_eq!(part1(&out), 41);
+    assert_eq!(part2(&out), 6);
 }
