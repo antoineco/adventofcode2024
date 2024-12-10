@@ -1,4 +1,4 @@
-use petgraph::visit::Dfs;
+use petgraph::visit::{Dfs, Visitable};
 use petgraph::{Directed, Graph};
 use std::collections::VecDeque;
 
@@ -64,8 +64,37 @@ pub fn part1(topo: &Topography) -> u32 {
         .sum()
 }
 
-pub fn part2(_: &Topography) -> u32 {
-    0
+pub fn part2(topo: &Topography) -> u32 {
+    let Topography { map, trailheads } = topo;
+    trailheads
+        .iter()
+        .map(|th| {
+            let mut score = 0;
+
+            let mut depth_queue = VecDeque::new();
+            depth_queue.push_front(0);
+
+            let mut dfs = Dfs::new(map, (*th).into());
+            while dfs.next(map).is_some() {
+                let node_depth = depth_queue.pop_front().unwrap();
+                if node_depth == 9 {
+                    score += 1;
+                    // Reset discovered nodes but, unlike dfs.reset(), keep the stack of nodes to visit.
+                    //
+                    // This allows the DFS to re-enter a branch that had previously been visited
+                    // via another ancestor.
+                    // Whenever an ancestor is visited, it is popped from the visit stack, which
+                    // then only ever contains its successor(s). As a result, we never visit the
+                    // exact same trail more than once, only portions of it.
+                    map.reset_map(&mut dfs.discovered);
+                }
+                for _ in depth_queue.len()..dfs.stack.len() {
+                    depth_queue.push_front(node_depth + 1);
+                }
+            }
+            score
+        })
+        .sum()
 }
 
 pub struct Topography {
@@ -101,6 +130,7 @@ fn sample_input_2() {
         ";
     let topo = parse(input);
     assert_eq!(part1(&topo), 4);
+    assert_eq!(part2(&topo), 13);
 }
 
 #[test]
@@ -132,4 +162,34 @@ fn sample_input_4() {
         ";
     let topo = parse(input);
     assert_eq!(part1(&topo), 36);
+    assert_eq!(part2(&topo), 81);
+}
+
+#[test]
+fn sample_input_5() {
+    let input = "\
+        .....0.\n\
+        ..4321.\n\
+        ..5..2.\n\
+        ..6543.\n\
+        ..7..4.\n\
+        ..8765.\n\
+        ..9....\n\
+        ";
+    let topo = parse(input);
+    assert_eq!(part2(&topo), 3);
+}
+
+#[test]
+fn sample_input_6() {
+    let input = "\
+        012345\n\
+        123456\n\
+        234567\n\
+        345678\n\
+        4.6789\n\
+        56789.\n\
+        ";
+    let topo = parse(input);
+    assert_eq!(part2(&topo), 227);
 }
